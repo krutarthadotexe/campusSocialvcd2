@@ -5,7 +5,9 @@ const initialRegister = {
   email: '',
   username: '',
   password: '',
-  name: ''
+  name: '',
+  role: 'student',
+  rolePassword: ''
 };
 
 export function AuthPanel() {
@@ -114,6 +116,34 @@ export function AuthPanel() {
                 required
               />
             </label>
+            <label>
+              Role
+              <select
+                value={registerForm.role}
+                onChange={(event) =>
+                  setRegisterForm({
+                    ...registerForm,
+                    role: event.target.value,
+                    rolePassword: event.target.value === 'teacher' ? registerForm.rolePassword : ''
+                  })
+                }
+              >
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+              </select>
+            </label>
+            {registerForm.role === 'teacher' ? (
+              <label>
+                Teacher confirmation password
+                <input
+                  type="password"
+                  value={registerForm.rolePassword}
+                  onChange={(event) => setRegisterForm({ ...registerForm, rolePassword: event.target.value })}
+                  placeholder="Enter teacher password"
+                  required
+                />
+              </label>
+            ) : null}
           </>
         )}
 

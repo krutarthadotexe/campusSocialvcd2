@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar.jsx';
 import { FeedPage } from './pages/FeedPage.jsx';
 import { CreatePostPage } from './pages/CreatePostPage.jsx';
 import { DiscoverPage } from './pages/DiscoverPage.jsx';
+import { EventsPage } from './pages/EventsPage.jsx';
 import { MessagesPage } from './pages/MessagesPage.jsx';
 import { NotificationsPage } from './pages/NotificationsPage.jsx';
 import { ProfilePage } from './pages/ProfilePage.jsx';
@@ -20,6 +21,7 @@ function AppShell() {
           <Route path="/" element={<FeedPage />} />
           <Route path="/create" element={<CreatePostPage />} />
           <Route path="/discover" element={<DiscoverPage />} />
+          <Route path="/events" element={<EventsPage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/users/:username" element={<UserProfilePage />} />

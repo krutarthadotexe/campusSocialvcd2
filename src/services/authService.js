@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { env } from '../config/env.js';
 import { HTTP_STATUS } from '../constants/http.js';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/appError.js';
@@ -15,11 +16,18 @@ export async function registerUser(payload) {
   }
 
   const passwordHash = await bcrypt.hash(payload.password, 12);
+  const role = payload.role === 'teacher' ? 'teacher' : 'student';
+
+  if (role === 'teacher' && payload.rolePassword !== env.TEACHER_ROLE_PASSWORD) {
+    throw new AppError(HTTP_STATUS.FORBIDDEN, 'Teacher role password is invalid');
+  }
+
   const user = await User.create({
     email: payload.email,
     username: payload.username,
     passwordHash,
-    name: payload.name
+    name: payload.name,
+    role
   });
 
   return buildAuthPayload(user);
@@ -87,6 +95,7 @@ export function sanitizeUser(user) {
     name: serialized.name,
     bio: serialized.bio,
     avatar: serialized.avatar,
+    role: serialized.role,
     isPrivate: serialized.isPrivate,
     followersCount: serialized.followersCount,
     followingCount: serialized.followingCount,

@@ -61,6 +61,7 @@ export function PostCard({ post }) {
   }
 
   const primaryMedia = post.media[0];
+  const aspectRatio = post.aspectRatio || '1:1';
 
   return (
     <article className="panel post-card">
@@ -75,7 +76,7 @@ export function PostCard({ post }) {
         <span className="post-time">{new Date(post.createdAt).toLocaleString()}</span>
       </div>
 
-      <div className="media-frame">
+      <div className="media-frame" style={{ '--post-aspect-ratio': aspectRatio }}>
         {primaryMedia.resourceType === 'video' ? (
           <video controls src={primaryMedia.url} />
         ) : (

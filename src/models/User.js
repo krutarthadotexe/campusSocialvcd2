@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     bio: { type: String, default: '', maxlength: 160 },
     avatar: { type: avatarSchema, default: null },
+    role: { type: String, enum: ['student', 'teacher', 'admin'], default: 'student' },
     isPrivate: { type: Boolean, default: false },
     followersCount: { type: Number, default: 0 },
     followingCount: { type: Number, default: 0 },

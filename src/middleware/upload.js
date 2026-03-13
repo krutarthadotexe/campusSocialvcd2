@@ -42,3 +42,8 @@ export const storyUpload = [
     next();
   }
 ];
+
+export const eventPhotoUpload = [
+  upload.array('photos', 4),
+  (req, res, next) => next()
+];

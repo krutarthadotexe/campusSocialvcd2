@@ -131,7 +131,7 @@ export const listFollowing = asyncHandler(async (req, res) => {
 export const searchUsers = asyncHandler(async (req, res) => {
   const { q, limit } = req.validated.query;
   const users = await User.find({ $text: { $search: q } })
-    .select('username name avatar bio followersCount')
+    .select('username name avatar bio followersCount isPrivate')
     .limit(limit);
   const serializedUsers = serializeUsers(users);
   const userIds = serializedUsers.map((user) => user._id);

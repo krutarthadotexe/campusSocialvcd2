@@ -21,7 +21,7 @@ export function MessagesPage() {
       const payload = await api.getConversations();
       const items = payload.data.conversations;
       setConversations(items);
-      const nextActiveId = selectId || activeConversationId || items[0]?._id || null;
+      const nextActiveId = selectId ?? activeConversationId;
       setActiveConversationId(nextActiveId);
     } catch (err) {
       setError(err.message);
@@ -116,80 +116,85 @@ export function MessagesPage() {
 
   return (
     <section className="messages-layout">
-      <aside className="panel messages-sidebar">
-        <div className="panel-head">
-          <div>
-            <p className="eyebrow">Messages</p>
-            <h3>Your inbox</h3>
-          </div>
-        </div>
-
-        <div className="messages-list">
-          {conversations.map((conversation) => (
-            <button
-              key={conversation._id}
-              type="button"
-              className={`conversation-row ${conversation._id === activeConversationId ? 'active' : ''}`}
-              onClick={() => setActiveConversationId(conversation._id)}
-            >
-              <Avatar user={conversation.otherParticipant} size="medium" />
-              <div className="conversation-copy">
-                <strong>{conversation.otherParticipant?.name || conversation.otherParticipant?.username}</strong>
-                <span className="handle">@{conversation.otherParticipant?.username}</span>
-                <span className="subtle-text">{conversation.lastMessageText || 'Start the conversation'}</span>
-              </div>
-            </button>
-          ))}
-          {!conversations.length ? <p className="subtle-text">Start a conversation from Discover.</p> : null}
-        </div>
-      </aside>
-
-      <div className="panel messages-thread">
-        <div className="panel-head">
-          <div className="post-user">
-            {activeConversation?.otherParticipant ? <Avatar user={activeConversation.otherParticipant} size="small" /> : null}
+      {!activeConversationId ? (
+        <aside className="panel messages-sidebar">
+          <div className="panel-head">
             <div>
-              <p className="eyebrow">Thread</p>
-              <h3>{activeConversation?.otherParticipant?.name || 'Select a conversation'}</h3>
+              <p className="eyebrow">Messages</p>
+              <h3>Your inbox</h3>
             </div>
           </div>
-        </div>
 
-        {error ? <p className="error-banner">{error}</p> : null}
-        {loadingThread ? <p className="subtle-text">Loading messages...</p> : null}
+          {error ? <p className="error-banner">{error}</p> : null}
 
-        <div className="thread-messages">
-          {messages.map((message) => {
-            const isMine = String(message.sender?.id || message.sender?._id) === String(user.id);
-            return (
-              <div
-                key={message._id}
-                className={`chat-bubble ${isMine ? 'mine' : ''}`}
+          <div className="messages-list">
+            {conversations.map((conversation) => (
+              <button
+                key={conversation._id}
+                type="button"
+                className="conversation-row"
+                onClick={() => setActiveConversationId(conversation._id)}
               >
-                <div className="chat-meta">
-                  <Avatar user={message.sender} size="tiny" />
-                  <strong>{message.sender?.username}</strong>
+                <Avatar user={conversation.otherParticipant} size="medium" />
+                <div className="conversation-copy">
+                  <strong>{conversation.otherParticipant?.name || conversation.otherParticipant?.username}</strong>
+                  <span className="handle">@{conversation.otherParticipant?.username}</span>
+                  <span className="subtle-text">{conversation.lastMessageText || 'Start the conversation'}</span>
                 </div>
-                <p>{message.body}</p>
+              </button>
+            ))}
+            {!conversations.length ? <p className="subtle-text">Start a conversation from Discover.</p> : null}
+          </div>
+        </aside>
+      ) : (
+        <div className="panel messages-thread">
+          <div className="panel-head">
+            <div className="post-user">
+              {activeConversation?.otherParticipant ? <Avatar user={activeConversation.otherParticipant} size="small" /> : null}
+              <div>
+                <p className="eyebrow">Thread</p>
+                <h3>{activeConversation?.otherParticipant?.name || 'Conversation'}</h3>
               </div>
-            );
-          })}
-          {!loadingThread && activeConversationId && !messages.length ? <p className="subtle-text">No messages yet.</p> : null}
-          {!activeConversationId ? <p className="subtle-text">Pick a conversation from the left.</p> : null}
-        </div>
+            </div>
+            <button className="ghost-button" type="button" onClick={() => setActiveConversationId(null)}>
+              Back to inbox
+            </button>
+          </div>
 
-        <form className="comment-form" onSubmit={handleSend}>
-          <input
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={activeConversationId ? 'Write a message...' : 'Select a conversation first'}
-            disabled={!activeConversationId}
-          />
-          <button className="primary-button compact" type="submit" disabled={!activeConversationId}>
-            Send
-          </button>
-        </form>
-      </div>
+          {error ? <p className="error-banner">{error}</p> : null}
+          {loadingThread ? <p className="subtle-text">Loading messages...</p> : null}
+
+          <div className="thread-messages">
+            {messages.map((message) => {
+              const isMine = String(message.sender?.id || message.sender?._id) === String(user.id);
+              return (
+                <div
+                  key={message._id}
+                  className={`chat-bubble ${isMine ? 'mine' : ''}`}
+                >
+                  <div className="chat-meta">
+                    <Avatar user={message.sender} size="tiny" />
+                    <strong>{message.sender?.username}</strong>
+                  </div>
+                  <p>{message.body}</p>
+                </div>
+              );
+            })}
+            {!loadingThread && !messages.length ? <p className="subtle-text">No messages yet.</p> : null}
+          </div>
+
+          <form className="comment-form" onSubmit={handleSend}>
+            <input
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Write a message..."
+            />
+            <button className="primary-button compact" type="submit">
+              Send
+            </button>
+          </form>
+        </div>
+      )}
     </section>
   );
 }

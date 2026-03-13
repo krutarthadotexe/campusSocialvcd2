@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { Avatar } from './Avatar.jsx';
 
+const ASPECT_RATIO_OPTIONS = [
+  { value: '1:1', label: 'Square 1:1' },
+  { value: '4:5', label: 'Portrait 4:5' },
+  { value: '16:9', label: 'Landscape 16:9' },
+  { value: '3:2', label: 'Classic 3:2' }
+];
+
 export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted }) {
   const [post, setPost] = useState(null);
-  const [form, setForm] = useState({ caption: '', locationText: '', tags: '' });
+  const [form, setForm] = useState({ caption: '', aspectRatio: '1:1', locationText: '', tags: '' });
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,6 +32,7 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
         setPost(fetchedPost);
         setForm({
           caption: fetchedPost.caption || '',
+          aspectRatio: fetchedPost.aspectRatio || '1:1',
           locationText: fetchedPost.locationText || '',
           tags: (fetchedPost.tags || []).join(', ')
         });
@@ -49,10 +57,11 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
     setSaving(true);
     setError('');
     try {
-      const payload = await api.updatePost(postId, form);
+      const payload = await api.updatePostDetails(postId, form);
       setPost(payload.data.post);
       setForm({
         caption: payload.data.post.caption || '',
+        aspectRatio: payload.data.post.aspectRatio || '1:1',
         locationText: payload.data.post.locationText || '',
         tags: (payload.data.post.tags || []).join(', ')
       });
@@ -69,7 +78,7 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
     setSaving(true);
     setError('');
     try {
-      await api.deletePost(postId);
+      await api.deletePostItem(postId);
       onDeleted(postId);
       onClose();
     } catch (err) {
@@ -80,6 +89,7 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
 
   const isOwner = post && String(post.owner?.id || post.owner?._id) === String(currentUserId);
   const primaryMedia = post?.media?.[0];
+  const aspectRatio = post?.aspectRatio || '1:1';
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -101,7 +111,7 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
               </div>
             </div>
 
-            <div className="media-frame">
+            <div className="media-frame" style={{ '--post-aspect-ratio': aspectRatio }}>
               {primaryMedia?.resourceType === 'video' ? (
                 <video controls src={primaryMedia.url} />
               ) : (
@@ -114,6 +124,16 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
                 <label>
                   Caption
                   <textarea value={form.caption} onChange={(event) => setForm({ ...form, caption: event.target.value })} rows={4} />
+                </label>
+                <label>
+                  Display ratio
+                  <select value={form.aspectRatio} onChange={(event) => setForm({ ...form, aspectRatio: event.target.value })}>
+                    {ASPECT_RATIO_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label>
                   Location

@@ -18,6 +18,7 @@ export function Sidebar() {
         <NavLink to="/">Feed</NavLink>
         <NavLink to="/create">Create</NavLink>
         <NavLink to="/discover">Discover</NavLink>
+        <NavLink to="/events">Events</NavLink>
         <NavLink to="/messages">Messages</NavLink>
         <NavLink to="/profile">Profile</NavLink>
         <NavLink to="/settings">Settings</NavLink>

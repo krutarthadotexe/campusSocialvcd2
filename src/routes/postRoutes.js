@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createPost,
   deletePost,
+  getDiscoverPosts,
   getFeed,
   getPostMedia,
   getPost,
@@ -13,11 +14,12 @@ import {
 import { requireAuth } from '../middleware/auth.js';
 import { postMediaUpload } from '../middleware/upload.js';
 import { validateRequest } from '../middleware/validate.js';
-import { createPostSchema, feedSchema, listPostsSchema, postIdParamSchema, updatePostSchema } from '../validators/postValidators.js';
+import { createPostSchema, discoverFeedSchema, feedSchema, listPostsSchema, postIdParamSchema, updatePostSchema } from '../validators/postValidators.js';
 
 export const postRouter = Router();
 
 postRouter.get('/feed', requireAuth, validateRequest(feedSchema), getFeed);
+postRouter.get('/discover', requireAuth, validateRequest(discoverFeedSchema), getDiscoverPosts);
 postRouter.post('/', requireAuth, postMediaUpload, validateRequest(createPostSchema), createPost);
 postRouter.get('/user/:userId', requireAuth, validateRequest(listPostsSchema), listUserPosts);
 postRouter.get('/:postId/media/:mediaIndex', getPostMedia);

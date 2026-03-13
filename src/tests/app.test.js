@@ -6,6 +6,7 @@ const defaultEnv = {
   JWT_REFRESH_SECRET: 'test-refresh-secret',
   JWT_ACCESS_TTL: '15m',
   JWT_REFRESH_TTL: '7d',
+  TEACHER_ROLE_PASSWORD: 'Teacher123',
   REFRESH_COOKIE_NAME: 'refreshToken',
   CORS_ORIGIN: 'http://localhost:3000'
 };
@@ -66,6 +67,29 @@ describe('API integration', () => {
     expect(logoutResponse.status).toBe(200);
   });
 
+  it('allows teacher signup only with the teacher role password', async () => {
+    const validTeacher = await request(app).post('/api/v1/auth/register').send({
+      email: 'teacher-signup@example.com',
+      username: 'teacher_signup',
+      password: 'Password123',
+      name: 'Teacher Signup',
+      role: 'teacher',
+      rolePassword: 'Teacher123'
+    });
+    expect(validTeacher.status).toBe(201);
+    expect(validTeacher.body.data.user.role).toBe('teacher');
+
+    const invalidTeacher = await request(app).post('/api/v1/auth/register').send({
+      email: 'teacher-fail@example.com',
+      username: 'teacher_fail',
+      password: 'Password123',
+      name: 'Teacher Fail',
+      role: 'teacher',
+      rolePassword: 'WrongPassword'
+    });
+    expect(invalidTeacher.status).toBe(403);
+  });
+
   it('prevents duplicate follow and surfaces feed posts from followed users', async () => {
     const owner = await helperModule.createAuthenticatedAgent(app, {
       email: 'owner@example.com',
@@ -84,9 +108,11 @@ describe('API integration', () => {
       .post('/api/v1/posts')
       .set('Authorization', `Bearer ${owner.accessToken}`)
       .field('caption', 'hello')
+      .field('aspectRatio', '4:5')
       .attach('media', Buffer.from('fake-image-data'), { filename: 'sample.jpg', contentType: 'image/jpeg' });
     expect(postResponse.status).toBe(201);
     expect(postResponse.body.data.post.media[0].url).toMatch(/^\/api\/v1\/posts\//);
+    expect(postResponse.body.data.post.aspectRatio).toBe('4:5');
 
     const followResponse = await viewer.agent
       .post(`/api/v1/users/${owner.user.id}/follow`)
@@ -274,5 +300,150 @@ describe('API integration', () => {
       .set('Authorization', `Bearer ${owner.accessToken}`);
     expect(viewersResponse.status).toBe(200);
     expect(viewersResponse.body.data.viewers).toHaveLength(1);
+  });
+
+  it('allows only teachers to create events while everyone can view them', async () => {
+    const admin = await helperModule.createAuthenticatedAgent(app, {
+      email: 'admin@example.com',
+      username: 'admin_user',
+      password: 'Password123',
+      name: 'Admin User'
+    });
+    const teacher = await helperModule.createAuthenticatedAgent(app, {
+      email: 'teacher@example.com',
+      username: 'teacher_user',
+      password: 'Password123',
+      name: 'Teacher User',
+      role: 'teacher',
+      rolePassword: 'Teacher123'
+    });
+    const student = await helperModule.createAuthenticatedAgent(app, {
+      email: 'student@example.com',
+      username: 'student_user',
+      password: 'Password123',
+      name: 'Student User'
+    });
+
+    const { User } = await import('../models/User.js');
+    await User.findByIdAndUpdate(admin.user.id, { role: 'admin' });
+
+    const forbiddenResponse = await student.agent
+      .post('/api/v1/events')
+      .set('Authorization', `Bearer ${student.accessToken}`)
+      .send({
+        title: 'Student event',
+        description: 'Should not be allowed',
+        location: 'Campus Hall',
+        startsAt: new Date('2026-04-01T10:00:00.000Z').toISOString(),
+        endsAt: new Date('2026-04-01T12:00:00.000Z').toISOString()
+      });
+    expect(forbiddenResponse.status).toBe(403);
+
+    const createResponse = await teacher.agent
+      .post('/api/v1/events')
+      .set('Authorization', `Bearer ${teacher.accessToken}`)
+      .field('title', 'Faculty meetup')
+      .field('description', 'Campus-wide teacher-led event')
+      .field('location', 'Main Auditorium')
+      .field('startsAt', new Date('2026-04-01T10:00:00.000Z').toISOString())
+      .field('endsAt', new Date('2026-04-01T12:00:00.000Z').toISOString())
+      .attach('photos', Buffer.from('fake-event-photo'), { filename: 'event.jpg', contentType: 'image/jpeg' });
+    expect(createResponse.status).toBe(201);
+    const eventId = createResponse.body.data.event._id;
+    expect(createResponse.body.data.event.photos).toHaveLength(1);
+
+    const listResponse = await student.agent
+      .get('/api/v1/events')
+      .set('Authorization', `Bearer ${student.accessToken}`);
+    expect(listResponse.status).toBe(200);
+    expect(listResponse.body.data.events).toHaveLength(1);
+    expect(listResponse.body.data.events[0].createdBy.username).toBe('teacher_user');
+
+    const eventPhotoResponse = await student.agent
+      .get(createResponse.body.data.event.photos[0].url)
+      .set('Authorization', `Bearer ${student.accessToken}`);
+    expect(eventPhotoResponse.status).toBe(200);
+    expect(eventPhotoResponse.headers['content-type']).toContain('image/jpeg');
+
+    const rsvpResponse = await student.agent
+      .post(`/api/v1/events/${eventId}/rsvp`)
+      .set('Authorization', `Bearer ${student.accessToken}`)
+      .send({ status: 'going' });
+    expect(rsvpResponse.status).toBe(200);
+    expect(rsvpResponse.body.data.event.currentUserRsvp).toBe('going');
+    expect(rsvpResponse.body.data.event.stats.goingCount).toBe(1);
+
+    const editResponse = await teacher.agent
+      .patch(`/api/v1/events/${eventId}`)
+      .set('Authorization', `Bearer ${teacher.accessToken}`)
+      .send({ title: 'Faculty meetup updated' });
+    expect(editResponse.status).toBe(200);
+    expect(editResponse.body.data.event.title).toBe('Faculty meetup updated');
+
+    const deleteResponse = await teacher.agent
+      .delete(`/api/v1/events/${eventId}`)
+      .set('Authorization', `Bearer ${teacher.accessToken}`);
+    expect(deleteResponse.status).toBe(200);
+  });
+
+  it('shows public posts in discover and hides private-account posts unless followed', async () => {
+    const viewer = await helperModule.createAuthenticatedAgent(app, {
+      email: 'discover-viewer@example.com',
+      username: 'discover_viewer',
+      password: 'Password123',
+      name: 'Discover Viewer'
+    });
+    const publicUser = await helperModule.createAuthenticatedAgent(app, {
+      email: 'public-poster@example.com',
+      username: 'public_poster',
+      password: 'Password123',
+      name: 'Public Poster'
+    });
+    const privateUser = await helperModule.createAuthenticatedAgent(app, {
+      email: 'private-poster@example.com',
+      username: 'private_poster',
+      password: 'Password123',
+      name: 'Private Poster'
+    });
+
+    const { User } = await import('../models/User.js');
+    await User.findByIdAndUpdate(privateUser.user.id, { isPrivate: true });
+
+    const publicPostResponse = await publicUser.agent
+      .post('/api/v1/posts')
+      .set('Authorization', `Bearer ${publicUser.accessToken}`)
+      .field('caption', 'public discover post')
+      .attach('media', Buffer.from('public-post-data'), { filename: 'public.jpg', contentType: 'image/jpeg' });
+    expect(publicPostResponse.status).toBe(201);
+
+    const privatePostResponse = await privateUser.agent
+      .post('/api/v1/posts')
+      .set('Authorization', `Bearer ${privateUser.accessToken}`)
+      .field('caption', 'private discover post')
+      .attach('media', Buffer.from('private-post-data'), { filename: 'private.jpg', contentType: 'image/jpeg' });
+    expect(privatePostResponse.status).toBe(201);
+
+    const discoverBeforeFollow = await viewer.agent
+      .get('/api/v1/posts/discover')
+      .set('Authorization', `Bearer ${viewer.accessToken}`);
+    expect(discoverBeforeFollow.status).toBe(200);
+    expect(discoverBeforeFollow.body.data.posts.map((post) => post.caption)).toContain('public discover post');
+    expect(discoverBeforeFollow.body.data.posts.map((post) => post.caption)).not.toContain('private discover post');
+
+    await viewer.agent
+      .post(`/api/v1/users/${privateUser.user.id}/follow`)
+      .set('Authorization', `Bearer ${viewer.accessToken}`);
+
+    const { Follow } = await import('../models/Follow.js');
+    await Follow.findOneAndUpdate(
+      { follower: viewer.user.id, following: privateUser.user.id },
+      { status: 'accepted' }
+    );
+
+    const discoverAfterFollow = await viewer.agent
+      .get('/api/v1/posts/discover')
+      .set('Authorization', `Bearer ${viewer.accessToken}`);
+    expect(discoverAfterFollow.status).toBe(200);
+    expect(discoverAfterFollow.body.data.posts.map((post) => post.caption)).toContain('private discover post');
   });
 });

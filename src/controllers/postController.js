@@ -5,7 +5,7 @@ import { Like } from '../models/Like.js';
 import { Notification } from '../models/Notification.js';
 import { Post } from '../models/Post.js';
 import { User } from '../models/User.js';
-import { getHomeFeed } from '../services/feedService.js';
+import { getDiscoverFeed, getHomeFeed } from '../services/feedService.js';
 import { createNotification } from '../services/notificationService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/apiResponse.js';
@@ -53,6 +53,7 @@ export const createPost = asyncHandler(async (req, res) => {
     owner: req.user.id,
     caption: body.caption,
     media,
+    aspectRatio: body.aspectRatio,
     locationText: body.locationText || '',
     tags
   });
@@ -84,9 +85,12 @@ export const updatePost = asyncHandler(async (req, res) => {
     throw new AppError(HTTP_STATUS.FORBIDDEN, 'You do not have permission to edit this post');
   }
 
-  const { caption, locationText, tags } = req.validated.body;
+  const { caption, aspectRatio, locationText, tags } = req.validated.body;
   if (caption !== undefined) {
     post.caption = caption;
+  }
+  if (aspectRatio !== undefined) {
+    post.aspectRatio = aspectRatio;
   }
   if (locationText !== undefined) {
     post.locationText = locationText;
@@ -192,6 +196,16 @@ export const unlikePost = asyncHandler(async (req, res) => {
 
 export const getFeed = asyncHandler(async (req, res) => {
   const { items, meta } = await getHomeFeed({
+    userId: req.user.id,
+    cursor: req.validated.query.cursor,
+    limit: req.validated.query.limit
+  });
+
+  return sendSuccess(res, HTTP_STATUS.OK, { posts: await attachLikedByMe(items, req.user.id) }, meta);
+});
+
+export const getDiscoverPosts = asyncHandler(async (req, res) => {
+  const { items, meta } = await getDiscoverFeed({
     userId: req.user.id,
     cursor: req.validated.query.cursor,
     limit: req.validated.query.limit

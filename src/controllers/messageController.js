@@ -7,6 +7,10 @@ import { sendSuccess } from '../utils/apiResponse.js';
 import { AppError } from '../utils/appError.js';
 import { serializeConversation, serializeConversations, serializeMessage, serializeMessages } from '../utils/messageSerializer.js';
 
+function buildParticipantsKey(userA, userB) {
+  return [String(userA), String(userB)].sort().join(':');
+}
+
 function ensureParticipant(conversation, userId) {
   if (!conversation.participants.some((participant) => String(participant._id || participant) === String(userId))) {
     throw new AppError(HTTP_STATUS.FORBIDDEN, 'You do not have access to this conversation');
@@ -24,16 +28,24 @@ export const getOrCreateDirectConversation = asyncHandler(async (req, res) => {
     throw new AppError(HTTP_STATUS.NOT_FOUND, 'User not found');
   }
 
-  let conversation = await Conversation.findOne({
-    participants: { $all: [req.user.id, targetUserId], $size: 2 }
-  }).populate('participants', 'username name avatar');
+  const participantsKey = buildParticipantsKey(req.user.id, targetUserId);
+  let conversation = await Conversation.findOne({ participantsKey }).populate('participants', 'username name avatar');
 
   if (!conversation) {
-    conversation = await Conversation.create({
-      participants: [req.user.id, targetUserId],
-      lastMessageAt: new Date()
-    });
-    await conversation.populate('participants', 'username name avatar');
+    conversation = await Conversation.findOneAndUpdate(
+      { participantsKey },
+      {
+        $setOnInsert: {
+          participants: [req.user.id, targetUserId],
+          participantsKey,
+          lastMessageAt: new Date()
+        }
+      },
+      {
+        new: true,
+        upsert: true
+      }
+    ).populate('participants', 'username name avatar');
   }
 
   return sendSuccess(res, HTTP_STATUS.OK, {
@@ -46,8 +58,18 @@ export const listConversations = asyncHandler(async (req, res) => {
     .sort({ lastMessageAt: -1, _id: -1 })
     .populate('participants', 'username name avatar');
 
+  const deduped = [];
+  const seenKeys = new Set();
+  for (const conversation of conversations) {
+    if (seenKeys.has(conversation.participantsKey)) {
+      continue;
+    }
+    seenKeys.add(conversation.participantsKey);
+    deduped.push(conversation);
+  }
+
   return sendSuccess(res, HTTP_STATUS.OK, {
-    conversations: serializeConversations(conversations, req.user.id)
+    conversations: serializeConversations(deduped, req.user.id)
   });
 });
 

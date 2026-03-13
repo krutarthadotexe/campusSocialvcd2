@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+export const POST_ASPECT_RATIOS = ['1:1', '4:5', '16:9', '3:2'];
+
 const mediaSchema = new mongoose.Schema(
   {
     filename: { type: String, required: true },
@@ -18,6 +20,7 @@ const postSchema = new mongoose.Schema(
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     caption: { type: String, default: '', maxlength: 2200 },
     media: { type: [mediaSchema], required: true, validate: [(value) => value.length > 0, 'Post requires media'] },
+    aspectRatio: { type: String, enum: POST_ASPECT_RATIOS, default: '1:1' },
     locationText: { type: String, default: '', maxlength: 120 },
     tags: { type: [String], default: [] },
     likesCount: { type: Number, default: 0 },

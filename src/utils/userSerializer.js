@@ -4,6 +4,7 @@ export function serializeUser(user) {
   return {
     ...plain,
     id: plain.id || String(plain._id),
+    role: plain.role,
     avatar: plain.avatar?.data
       ? {
           filename: plain.avatar.filename,
