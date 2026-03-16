@@ -11,6 +11,31 @@ function normalizeApiBase(value) {
 
 const API_BASE = normalizeApiBase(configuredApiBase);
 
+function getApiOrigin() {
+  if (API_BASE.startsWith('http://') || API_BASE.startsWith('https://')) {
+    return new URL(API_BASE).origin;
+  }
+
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return '';
+}
+
+export function resolveApiAssetUrl(path) {
+  if (!path) {
+    return path;
+  }
+
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
+    return path;
+  }
+
+  const origin = getApiOrigin();
+  return origin ? new URL(path, origin).toString() : path;
+}
+
 let accessToken = localStorage.getItem('accessToken');
 
 function setAccessToken(token) {

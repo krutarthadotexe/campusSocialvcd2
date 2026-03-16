@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
 const initialForm = {
@@ -254,7 +254,7 @@ export function EventsPage() {
             {event.photos?.length ? (
               <div className="event-photo-grid">
                 {event.photos.map((photo) => (
-                  <img key={photo.url} src={photo.url} alt={event.title} className="event-photo-preview" />
+                  <img key={photo.url} src={resolveApiAssetUrl(photo.url)} alt={event.title} className="event-photo-preview" />
                 ))}
               </div>
             ) : null}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Avatar } from './Avatar.jsx';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 
 export function StoryViewerModal({ storyGroup, currentUser, onClose, onSeen }) {
   const STORY_DURATION_MS = 10000;
@@ -169,9 +169,9 @@ export function StoryViewerModal({ storyGroup, currentUser, onClose, onSeen }) {
           onPointerCancel={() => setIsPaused(false)}
         >
           {story.media.resourceType === 'video' ? (
-            <video controls autoPlay src={story.media.url} />
+            <video controls autoPlay src={resolveApiAssetUrl(story.media.url)} />
           ) : (
-            <img src={story.media.url} alt={story.caption || 'Story'} />
+            <img src={resolveApiAssetUrl(story.media.url)} alt={story.caption || 'Story'} />
           )}
         </div>
 

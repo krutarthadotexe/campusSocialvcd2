@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar.jsx';
 import { PostModal } from '../components/PostModal.jsx';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
 export function DiscoverPage() {
@@ -130,7 +130,7 @@ export function DiscoverPage() {
           <div className="discover-post-grid">
             {discoverPosts.map((post) => (
               <button key={post._id} className="discover-post-card" type="button" onClick={() => setActivePostId(post._id)}>
-                <img src={post.media[0]?.url} alt={post.caption || 'Discover post'} />
+                <img src={resolveApiAssetUrl(post.media[0]?.url)} alt={post.caption || 'Discover post'} />
                 <div className="discover-post-overlay">
                   <span>@{post.owner?.username}</span>
                 </div>

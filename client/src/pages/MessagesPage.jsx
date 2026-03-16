@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Avatar } from '../components/Avatar.jsx';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
 export function MessagesPage() {
@@ -217,7 +217,7 @@ export function MessagesPage() {
                   {message.body ? <p>{message.body}</p> : null}
                   {message.sharedPost ? (
                     <div className="shared-post-card">
-                      <img src={message.sharedPost.media?.[0]?.url} alt={message.sharedPost.caption || 'Shared post'} />
+                      <img src={resolveApiAssetUrl(message.sharedPost.media?.[0]?.url)} alt={message.sharedPost.caption || 'Shared post'} />
                       <div className="shared-post-copy">
                         <strong>{message.sharedPost.owner?.name}</strong>
                         <span className="handle">@{message.sharedPost.owner?.username}</span>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { Avatar } from './Avatar.jsx';
 
 export function SharePostModal({ post, onClose }) {
@@ -78,7 +78,7 @@ export function SharePostModal({ post, onClose }) {
         </div>
 
         <div className="share-post-preview">
-          <img src={post.media[0]?.url} alt={post.caption || 'Shared post'} />
+          <img src={resolveApiAssetUrl(post.media[0]?.url)} alt={post.caption || 'Shared post'} />
           <div>
             <strong>{post.owner?.name}</strong>
             <p className="handle">@{post.owner?.username}</p>

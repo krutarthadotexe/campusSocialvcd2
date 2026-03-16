@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { Avatar } from './Avatar.jsx';
 import { SharePostModal } from './SharePostModal.jsx';
 
@@ -115,9 +115,9 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
 
             <div className="media-frame" style={{ '--post-aspect-ratio': aspectRatio }}>
               {primaryMedia?.resourceType === 'video' ? (
-                <video controls src={primaryMedia.url} />
+                <video controls src={resolveApiAssetUrl(primaryMedia.url)} />
               ) : (
-                <img src={primaryMedia?.url} alt={post.caption || 'Post'} />
+                <img src={resolveApiAssetUrl(primaryMedia?.url)} alt={post.caption || 'Post'} />
               )}
             </div>
 

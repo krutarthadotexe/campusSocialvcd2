@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Avatar } from '../components/Avatar.jsx';
 import { PostModal } from '../components/PostModal.jsx';
 import { UserListModal } from '../components/UserListModal.jsx';
-import { api } from '../lib/api.js';
+import { api, resolveApiAssetUrl } from '../lib/api.js';
 import { useAuth } from '../state/AuthContext.jsx';
 
 export function ProfilePage() {
@@ -77,7 +77,7 @@ export function ProfilePage() {
           <div className="mini-post-grid">
             {posts.map((post) => (
               <button key={post._id} className="post-thumb-button" type="button" onClick={() => setActivePostId(post._id)}>
-                <img src={post.media[0].url} alt={post.caption || 'Post'} />
+                <img src={resolveApiAssetUrl(post.media[0].url)} alt={post.caption || 'Post'} />
               </button>
             ))}
             {!posts.length ? <p className="subtle-text">No posts yet.</p> : null}
