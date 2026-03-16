@@ -243,6 +243,21 @@ describe('API integration', () => {
       .set('Authorization', `Bearer ${alice.accessToken}`)
       .send({ body: 'hello bob' });
     expect(sendResponse.status).toBe(201);
+    const messageId = sendResponse.body.data.message._id;
+
+    const sharedPostResponse = await alice.agent
+      .post('/api/v1/posts')
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .field('caption', 'share this post')
+      .attach('media', Buffer.from('share-post-data'), { filename: 'share.jpg', contentType: 'image/jpeg' });
+    expect(sharedPostResponse.status).toBe(201);
+
+    const shareMessageResponse = await alice.agent
+      .post(`/api/v1/messages/conversations/${conversationId}/messages`)
+      .set('Authorization', `Bearer ${alice.accessToken}`)
+      .send({ body: 'check this out', sharedPostId: sharedPostResponse.body.data.post._id });
+    expect(shareMessageResponse.status).toBe(201);
+    expect(shareMessageResponse.body.data.message.sharedPost._id).toBe(sharedPostResponse.body.data.post._id);
 
     const inboxResponse = await bob.agent
       .get('/api/v1/messages/conversations')
@@ -255,6 +270,19 @@ describe('API integration', () => {
       .set('Authorization', `Bearer ${bob.accessToken}`);
     expect(threadResponse.status).toBe(200);
     expect(threadResponse.body.data.messages[0].body).toBe('hello bob');
+    expect(threadResponse.body.data.messages[1].sharedPost._id).toBe(sharedPostResponse.body.data.post._id);
+
+    const deleteMessageResponse = await alice.agent
+      .delete(`/api/v1/messages/conversations/${conversationId}/messages/${messageId}`)
+      .set('Authorization', `Bearer ${alice.accessToken}`);
+    expect(deleteMessageResponse.status).toBe(200);
+
+    const threadAfterDeleteResponse = await bob.agent
+      .get(`/api/v1/messages/conversations/${conversationId}/messages`)
+      .set('Authorization', `Bearer ${bob.accessToken}`);
+    expect(threadAfterDeleteResponse.status).toBe(200);
+    expect(threadAfterDeleteResponse.body.data.messages).toHaveLength(1);
+    expect(threadAfterDeleteResponse.body.data.messages[0].sharedPost._id).toBe(sharedPostResponse.body.data.post._id);
   });
 
   it('supports 24-hour stories, viewing, and viewer lists', async () => {

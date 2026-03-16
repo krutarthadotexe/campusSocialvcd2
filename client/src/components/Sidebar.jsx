@@ -4,10 +4,20 @@ import { Avatar } from './Avatar.jsx';
 
 export function Sidebar() {
   const { user, logout } = useAuth();
+  const navItems = [
+    { to: '/', label: 'Feed' },
+    { to: '/create', label: 'Create' },
+    { to: '/discover', label: 'Discover' },
+    { to: '/events', label: 'Events' },
+    { to: '/messages', label: 'Messages' },
+    { to: '/profile', label: 'Profile' },
+    { to: '/settings', label: 'Settings' },
+    { to: '/notifications', label: 'Alerts' }
+  ];
 
   return (
     <aside className="sidebar">
-      <div>
+      <div className="sidebar-profile">
         <Avatar user={user} size="large" />
         <p className="eyebrow">Signed in as</p>
         <h2>{user.name}</h2>
@@ -15,17 +25,14 @@ export function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        <NavLink to="/">Feed</NavLink>
-        <NavLink to="/create">Create</NavLink>
-        <NavLink to="/discover">Discover</NavLink>
-        <NavLink to="/events">Events</NavLink>
-        <NavLink to="/messages">Messages</NavLink>
-        <NavLink to="/profile">Profile</NavLink>
-        <NavLink to="/settings">Settings</NavLink>
-        <NavLink to="/notifications">Notifications</NavLink>
+        {navItems.map((item) => (
+          <NavLink key={item.to} to={item.to}>
+            {item.label}
+          </NavLink>
+        ))}
       </nav>
 
-      <button className="ghost-button" type="button" onClick={logout}>
+      <button className="ghost-button sidebar-logout" type="button" onClick={logout}>
         Logout
       </button>
     </aside>

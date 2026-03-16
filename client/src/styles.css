@@ -197,6 +197,10 @@ textarea {
   margin: 10px 0 6px;
 }
 
+.sidebar-profile {
+  min-width: 0;
+}
+
 .sidebar-nav {
   display: grid;
   gap: 10px;
@@ -242,6 +246,10 @@ textarea {
   min-width: 0;
 }
 
+.post-card {
+  width: 100%;
+}
+
 .panel-head,
 .post-head,
 .post-actions,
@@ -251,6 +259,14 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.post-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .profile-hero,
@@ -725,6 +741,48 @@ textarea {
   background: rgba(216, 95, 48, 0.14);
 }
 
+.message-delete-button {
+  margin-top: 10px;
+}
+
+.share-modal-card {
+  display: grid;
+  gap: 18px;
+}
+
+.share-post-preview,
+.shared-post-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  border: 1px solid rgba(58, 39, 26, 0.1);
+  border-radius: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.share-post-preview img,
+.shared-post-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.share-recipient-list {
+  display: grid;
+  gap: 10px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.shared-post-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
 @media (max-width: 980px) {
   .auth-panel,
   .app-shell,
@@ -744,6 +802,14 @@ textarea {
   .search-panel,
   .profile-summary {
     position: static;
+  }
+}
+
+@media (min-width: 981px) {
+  .post-card,
+  .feed-summary-panel {
+    max-width: 720px;
+    justify-self: center;
   }
 }
 
@@ -768,18 +834,28 @@ textarea {
   .app-shell {
     gap: 16px;
     padding: 14px;
+    padding-bottom: 96px;
   }
 
   .sidebar {
-    padding: 16px;
+    position: fixed;
+    inset: auto 10px 10px 10px;
+    z-index: 40;
+    height: auto;
+    top: auto;
+    padding: 10px 12px;
+    border-radius: 24px;
+    background: rgba(255, 250, 240, 0.92);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 18px 40px rgba(72, 39, 19, 0.18);
   }
 
   .sidebar-nav {
     display: flex;
     overflow-x: auto;
-    gap: 10px;
-    margin: 18px 0;
-    padding-bottom: 4px;
+    gap: 8px;
+    margin: 0;
+    padding-bottom: 0;
     scrollbar-width: none;
   }
 
@@ -789,7 +865,13 @@ textarea {
 
   .sidebar-nav a {
     flex: 0 0 auto;
-    padding: 10px 14px;
+    padding: 10px 12px;
+    font-size: 0.86rem;
+  }
+
+  .sidebar-profile,
+  .sidebar-logout {
+    display: none;
   }
 
   .panel-head,
@@ -829,6 +911,11 @@ textarea {
 
   .inline-form > * {
     width: 100%;
+  }
+
+  .post-head-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .comment-form {
@@ -896,11 +983,9 @@ textarea {
     font-size: clamp(2.2rem, 11vw, 3.2rem);
   }
 
-  .sidebar > div:first-child {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 12px;
-    align-items: center;
+  .sidebar {
+    inset: auto 8px 8px 8px;
+    padding: 8px 10px;
   }
 
   .avatar-large {
@@ -927,8 +1012,23 @@ textarea {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .sidebar-nav {
+    justify-content: flex-start;
+  }
+
+  .sidebar-nav a {
+    padding: 9px 10px;
+    font-size: 0.8rem;
+  }
+
   .media-frame {
     border-radius: 18px;
+  }
+
+  .share-post-preview,
+  .shared-post-card {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 10px;
   }
 
   .conversation-row {

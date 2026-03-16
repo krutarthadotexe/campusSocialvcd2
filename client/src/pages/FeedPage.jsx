@@ -62,7 +62,7 @@ export function FeedPage() {
           onCreateStory={handleCreateStory}
         />
 
-        <div className="panel">
+        <div className="panel feed-summary-panel">
           <div className="panel-head">
             <div>
               <p className="eyebrow">Feed</p>
@@ -79,7 +79,7 @@ export function FeedPage() {
         </div>
 
         {posts.map((post) => (
-          <PostCard key={post._id} post={post} />
+          <PostCard key={post._id} post={post} onDeleted={(postId) => setPosts((current) => current.filter((item) => item._id !== postId))} />
         ))}
       </section>
 

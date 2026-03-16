@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
+import { useAuth } from '../state/AuthContext.jsx';
 import { Avatar } from './Avatar.jsx';
+import { SharePostModal } from './SharePostModal.jsx';
 
-export function PostCard({ post }) {
+export function PostCard({ post, onDeleted }) {
+  const { user } = useAuth();
   const [comments, setComments] = useState([]);
   const [showComments, setShowComments] = useState(false);
   const [commentBody, setCommentBody] = useState('');
   const [liked, setLiked] = useState(Boolean(post.likedByMe));
   const [likesCount, setLikesCount] = useState(post.likesCount);
+  const [deleting, setDeleting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -62,6 +67,19 @@ export function PostCard({ post }) {
 
   const primaryMedia = post.media[0];
   const aspectRatio = post.aspectRatio || '1:1';
+  const isOwner = String(post.owner?.id || post.owner?._id) === String(user.id);
+
+  async function handleDeletePost() {
+    setDeleting(true);
+    setError('');
+    try {
+      await api.deletePostItem(post._id);
+      onDeleted?.(post._id);
+    } catch (err) {
+      setError(err.message);
+      setDeleting(false);
+    }
+  }
 
   return (
     <article className="panel post-card">
@@ -73,7 +91,14 @@ export function PostCard({ post }) {
           <p className="handle">@{post.owner?.username || 'unknown'}</p>
           </div>
         </div>
-        <span className="post-time">{new Date(post.createdAt).toLocaleString()}</span>
+        <div className="post-head-actions">
+          <span className="post-time">{new Date(post.createdAt).toLocaleString()}</span>
+          {isOwner ? (
+            <button className="ghost-button danger-button" type="button" onClick={handleDeletePost} disabled={deleting}>
+              {deleting ? 'Deleting...' : 'Delete post'}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="media-frame" style={{ '--post-aspect-ratio': aspectRatio }}>
@@ -96,6 +121,9 @@ export function PostCard({ post }) {
         </button>
         <button className="ghost-button" type="button" onClick={loadComments}>
           {showComments ? 'Hide comments' : 'Show comments'} · {post.commentsCount}
+        </button>
+        <button className="ghost-button" type="button" onClick={() => setSharing(true)}>
+          Share
         </button>
       </div>
 
@@ -129,6 +157,8 @@ export function PostCard({ post }) {
       ) : null}
 
       {error ? <p className="error-banner">{error}</p> : null}
+
+      {sharing ? <SharePostModal post={post} onClose={() => setSharing(false)} /> : null}
     </article>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api.js';
 import { Avatar } from './Avatar.jsx';
+import { SharePostModal } from './SharePostModal.jsx';
 
 const ASPECT_RATIO_OPTIONS = [
   { value: '1:1', label: 'Square 1:1' },
@@ -15,6 +16,7 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -165,6 +167,9 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
                   </>
                 ) : (
                   <>
+                    <button className="ghost-button" type="button" onClick={() => setSharing(true)}>
+                      Share
+                    </button>
                     <button className="ghost-button" type="button" onClick={() => setEditing(true)}>
                       Edit
                     </button>
@@ -175,8 +180,16 @@ export function PostModal({ postId, currentUserId, onClose, onUpdated, onDeleted
                 )}
               </div>
             ) : null}
+            {!isOwner ? (
+              <div className="post-actions">
+                <button className="ghost-button" type="button" onClick={() => setSharing(true)}>
+                  Share
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
+        {sharing && post ? <SharePostModal post={post} onClose={() => setSharing(false)} /> : null}
       </div>
     </div>
   );

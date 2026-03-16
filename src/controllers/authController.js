@@ -5,16 +5,22 @@ import { sendSuccess } from '../utils/apiResponse.js';
 import { loginUser, refreshSession, registerUser, revokeRefreshTokens, sanitizeUser } from '../services/authService.js';
 
 function setRefreshCookie(res, refreshToken) {
+  const isProduction = env.NODE_ENV === 'production';
   res.cookie(env.REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: env.NODE_ENV === 'production',
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
     path: '/api/v1/auth'
   });
 }
 
 function clearRefreshCookie(res) {
-  res.clearCookie(env.REFRESH_COOKIE_NAME, { path: '/api/v1/auth' });
+  const isProduction = env.NODE_ENV === 'production';
+  res.clearCookie(env.REFRESH_COOKIE_NAME, {
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
+    path: '/api/v1/auth'
+  });
 }
 
 export const register = asyncHandler(async (req, res) => {

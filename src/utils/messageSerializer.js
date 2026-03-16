@@ -1,4 +1,5 @@
 import { serializeUser } from './userSerializer.js';
+import { serializePost } from './postSerializer.js';
 
 export function serializeConversation(conversation, currentUserId) {
   const plain = conversation.toObject ? conversation.toObject() : conversation;
@@ -19,7 +20,8 @@ export function serializeMessage(message) {
 
   return {
     ...plain,
-    sender: plain.sender?.username ? serializeUser(plain.sender) : plain.sender
+    sender: plain.sender?.username ? serializeUser(plain.sender) : plain.sender,
+    sharedPost: plain.sharedPost?.media ? serializePost(plain.sharedPost) : plain.sharedPost
   };
 }
 

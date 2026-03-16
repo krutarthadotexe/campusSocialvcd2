@@ -4,7 +4,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { env } from './config/env.js';
+import { corsOrigins, env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 import { apiRouter } from './routes/index.js';
 
@@ -14,7 +14,7 @@ export function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.CORS_ORIGIN,
+      origin: corsOrigins,
       credentials: true
     })
   );

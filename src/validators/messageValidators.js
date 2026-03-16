@@ -29,11 +29,31 @@ export const listMessagesSchema = z.object({
 });
 
 export const createMessageSchema = z.object({
-  body: z.object({
-    body: z.string().min(1).max(2000)
-  }),
+  body: z
+    .object({
+      body: z.string().max(2000).default(''),
+      sharedPostId: objectId.optional()
+    })
+    .superRefine((value, ctx) => {
+      if (!value.body.trim() && !value.sharedPostId) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Message body or shared post is required',
+          path: ['body']
+        });
+      }
+    }),
   params: z.object({
     conversationId: objectId
+  }),
+  query: z.object({}).default({})
+});
+
+export const deleteMessageSchema = z.object({
+  body: z.object({}).default({}),
+  params: z.object({
+    conversationId: objectId,
+    messageId: objectId
   }),
   query: z.object({}).default({})
 });

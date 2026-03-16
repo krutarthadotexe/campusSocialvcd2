@@ -1,4 +1,15 @@
-const API_BASE = '/api/v1';
+const configuredApiBase = (import.meta.env.VITE_API_BASE_URL || '').trim();
+
+function normalizeApiBase(value) {
+  if (!value) {
+    return '/api/v1';
+  }
+
+  const trimmed = value.replace(/\/+$/, '');
+  return trimmed.endsWith('/api/v1') ? trimmed : `${trimmed}/api/v1`;
+}
+
+const API_BASE = normalizeApiBase(configuredApiBase);
 
 let accessToken = localStorage.getItem('accessToken');
 
@@ -99,6 +110,7 @@ export const api = {
   getMessages: (conversationId) => request(`/messages/conversations/${conversationId}/messages`),
   sendMessage: (conversationId, body) =>
     request(`/messages/conversations/${conversationId}/messages`, { method: 'POST', body: JSON.stringify(body) }),
+  deleteMessage: (conversationId, messageId) => request(`/messages/conversations/${conversationId}/messages/${messageId}`, { method: 'DELETE' }),
   markConversationRead: (conversationId) => request(`/messages/conversations/${conversationId}/read`, { method: 'POST' }),
   getPost: (postId) => request(`/posts/${postId}`),
   updatePostDetails: (postId, body) => request(`/posts/${postId}`, { method: 'PATCH', body: JSON.stringify(body) }),

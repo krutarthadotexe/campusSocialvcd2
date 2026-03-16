@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   createMessage,
+  deleteMessage,
   getOrCreateDirectConversation,
   listConversations,
   listMessages,
@@ -11,6 +12,7 @@ import { validateRequest } from '../middleware/validate.js';
 import {
   conversationIdSchema,
   createMessageSchema,
+  deleteMessageSchema,
   directConversationSchema,
   listMessagesSchema
 } from '../validators/messageValidators.js';
@@ -22,4 +24,5 @@ messageRouter.get('/conversations', listConversations);
 messageRouter.post('/conversations/direct/:userId', validateRequest(directConversationSchema), getOrCreateDirectConversation);
 messageRouter.get('/conversations/:conversationId/messages', validateRequest(listMessagesSchema), listMessages);
 messageRouter.post('/conversations/:conversationId/messages', validateRequest(createMessageSchema), createMessage);
+messageRouter.delete('/conversations/:conversationId/messages/:messageId', validateRequest(deleteMessageSchema), deleteMessage);
 messageRouter.post('/conversations/:conversationId/read', validateRequest(conversationIdSchema), markConversationRead);
