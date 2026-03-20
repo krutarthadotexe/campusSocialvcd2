@@ -43,7 +43,7 @@ export function AuthPanel() {
         <p className="eyebrow">Campus Social</p>
         <h1>Share moments, build circles, and see your feed come alive through real-time-ready flows.</h1>
         <p className="hero-subtle">
-          This React client is wired to your Express backend with JWT access tokens, refresh cookies,
+          This React client is wired to the Express backend with JWT access tokens, refresh cookies,
           MongoDB-backed media uploads, and the Instagram-style feed surface.
         </p>
       </div>
